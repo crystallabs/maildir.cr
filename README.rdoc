@@ -57,8 +57,10 @@ List "cur" messages based on flags.
 
   maildir.list("cur", :flags => '') # => lists all messages without any flags
   maildir.list("cur", :flags => 'F') # => lists all messages with flag 'F
-  maildir.list("cur", :flags => 'FS') # => lists all messages with flag 'F' and 'S'; Flags must be specified in acending ASCII order ('FS' and not 'SF')
-  maildir.list("cur", :flags => 'ST') # => lists all messages with flag 'S' and 'T'; Flags must be specified in acending ASCII order ('ST' and not 'TS')
+  maildir.list("cur", :flags => 'FS') # => lists all messages with flag 'F' and 'S'
+  maildir.list("cur", :flags => 'ST') # => lists all messages with flag 'S' and 'T'
+
+ # Flags must be specified in acending ASCII order ('ST' and not 'TS').
 
 Get a key to uniquely identify the message
 
@@ -128,7 +130,7 @@ It's trivial to create a custom serializer. Implement the following two methods:
 
 == Author
 
-* user docelic (github[http://github.com/docelic])
+* Davor Ocelic (github[http://github.com/docelic])
 
 == History
 
@@ -136,4 +138,4 @@ This module was initially converted from Ruby's implementation on https://github
 
 == Copyright
 
-Copyright (c) 2017 user docelic. See LICENSE for details.
+Copyright (c) 2017 Davor Ocelic. See LICENSE for details.
