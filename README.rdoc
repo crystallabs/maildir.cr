@@ -17,7 +17,9 @@ While the maildir format was created for email, it works well for arbitrary data
 
 == Install
 
- gem install maildir
+ dependencies:
+   maildir:
+     github: docelic/maildir.cr
 
 == Usage
 
@@ -127,6 +129,10 @@ It's trivial to create a custom serializer. Implement the following two methods:
 == Author
 
 * user docelic (github[http://github.com/docelic])
+
+== History
+
+This module was initially converted from Ruby's implementation on https://github.com/ktheory/maildir
 
 == Copyright
 

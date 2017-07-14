@@ -1,0 +1,9 @@
+name: maildir
+version: 2.2.2
+
+authors:
+  - Davor Ocelic <docelic@spinlocksolutions.com>
+
+crystal: 0.23.0
+
+license: MIT
