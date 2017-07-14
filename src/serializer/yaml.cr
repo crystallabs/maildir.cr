@@ -1,11 +1,11 @@
-require 'yaml'
+require "yaml"
 class Maildir
   module Serializer
     # Serialize messages as YAML
     class YAML < Maildir::Serializer::Base
       # Read data from path and parse it as YAML.
       def load(path)
-        ::YAML.load(super(path))
+        ::YAML.parse(super(path))
       end
 
       # Dump data as YAML and writes it to path.

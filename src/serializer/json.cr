@@ -1,9 +1,4 @@
-# Prefer yajl JSON library
-begin
-  require 'yajl/json_gem'
-rescue LoadError
-  require 'json'
-end
+require "json"
 
 class Maildir
   module Serializer
@@ -11,7 +6,7 @@ class Maildir
     class JSON < Base
       # Read data from path and parse it as JSON.
       def load(path)
-        ::JSON.load(super(path))
+        ::JSON.parse(super(path))
       end
 
       # Dump data as JSON and writes it to path.
