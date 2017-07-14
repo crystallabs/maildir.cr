@@ -1,8 +1,9 @@
 = Maildir
 
-A ruby library for reading and writing messages in the maildir format.
+A Crystal library for reading and writing files in the "Maildir" file and directory structure.
+Even though this format is mainly used for email messages, the Maildir structure and the implementation of this module are general - they do not require the file contents to be related to email.
 
-== What's so great about the maildir format
+== What's so great about the Maildir format
 
 See http://cr.yp.to/proto/maildir.html and http://en.wikipedia.org/wiki/Maildir
 
@@ -12,11 +13,7 @@ The maildir format allows multiple processes to read and write arbitrary message
 
 New messages are initially written to a "tmp" directory with an automatically-generated unique filename. After the message is written, it's moved to the "new" directory where other processes may read it.
 
-While the maildir format was created for email, it works well for arbitrary data. This library can read & write email messages or arbitrary data. See Pluggable serializers for more.
-
-{<img src="https://secure.travis-ci.org/ktheory/maildir.png" />}[http://travis-ci.org/ktheory/maildir]
-{<img src="https://codeclimate.com/github/ktheory/maildir.png" />}[https://codeclimate.com/github/ktheory/maildir]
-
+While the maildir format was created for email, it works well for arbitrary data. This library can read &amp; write email messages or arbitrary data. See Pluggable serializers for more.
 
 == Install
 
@@ -24,19 +21,19 @@ While the maildir format was created for email, it works well for arbitrary data
 
 == Usage
 
-Create a maildir in /home/aaron/mail
+Create a maildir in /home/user/mail
 
-  require 'maildir'
-  maildir = Maildir.new("/home/aaron/mail") # creates tmp, new, and cur dirs
-  # call Maildir.new("/home/aaron/mail", false) to skip directory creation.
+  require "maildir"
+  maildir = Maildir.new("/home/user/mail") # creates tmp, new, and cur dirs
+  # To skip directory creation, call Maildir.new("/home/user/mail", false)
 
-Add a new message. This creates a new file with the contents "Hello World!"; returns the path fragment to the file. Messages are written to the tmp dir then moved to new.
+Add a new message. This creates a new file with the contents "Hello, Crystal!"; returns the path fragment to the file. Messages are written to the tmp dir then moved to new.
 
-  message = maildir.add("Hello World!")
+  message = maildir.add("Hello, Crystal!")
 
 List new messages
 
-  maildir.list(:new) # => [message]
+  maildir.list("new") # => [message]
 
 Move the message from "new" to "cur" to indicate that some process has retrieved the message.
 
@@ -44,8 +41,8 @@ Move the message from "new" to "cur" to indicate that some process has retrieved
 
 Indeed, the message is in cur, not new.
 
-  maildir.list(:new) # => []
-  maildir.list(:cur) # => [message]
+  maildir.list("new") # => []
+  maildir.list("cur") # => [message]
 
 Add some flags to the message to indicate state. See "What can I put in info" at http://cr.yp.to/proto/maildir.html for flag conventions.
 
@@ -54,11 +51,12 @@ Add some flags to the message to indicate state. See "What can I put in info" at
   message.remove_flag("F") # unflag the message
   message.add_flag("T") # Mark the message as "trashed"
 
-List :cur messages based on flags.
+List "cur" messages based on flags.
 
-  maildir.list(:cur, :flags => 'F') # => lists all messages with flag 'F
-  maildir.list(:cur, :flags => 'FS') # => lists all messages with flag 'F' and 'S'; Flags must be specified in acending ASCII order ('FS' and not 'SF')
-  maildir.list(:cur, :flags => '') # => lists all messages without any flags
+  maildir.list("cur", :flags => '') # => lists all messages without any flags
+  maildir.list("cur", :flags => 'F') # => lists all messages with flag 'F
+  maildir.list("cur", :flags => 'FS') # => lists all messages with flag 'F' and 'S'; Flags must be specified in acending ASCII order ('FS' and not 'SF')
+  maildir.list("cur", :flags => 'ST') # => lists all messages with flag 'S' and 'T'; Flags must be specified in acending ASCII order ('ST' and not 'TS')
 
 Get a key to uniquely identify the message
 
@@ -76,7 +74,7 @@ Find the message based using the key
 Delete the message from disk
 
   message.destroy # => returns the frozen message
-  maildir.list(:cur) # => []
+  maildir.list("cur") # => []
 
 === Cleaning up from orphaned messages
 
@@ -98,8 +96,6 @@ By default, message data are written and read from disk as a string. It's often 
 The following serializers are included:
 
 * Maildir::Serializer::Base (default)
-* Maildir::Serializer::Mail
-* Maildir::Serializer::Marshal
 * Maildir::Serializer::JSON
 * Maildir::Serializer::YAML
 
@@ -108,34 +104,15 @@ Maildir::Serializer::Base simply reads and writes strings to disk.
 `Maildir.serializer` and `Maildir.serializer=` allow you to set default serializer.
 
   Maildir.serializer # => Maildir::Serializer::Base.new (default)
-  message = maildir.add("Hello World!") # writes "Hello World!" to disk
-  message.data # => "Hello World!"
+  message = maildir.add("Hello, Crystal!") # writes "Hello, Crystal!" to disk
+  message.data # => "Hello, Crystal!"
 
 You can also set the serializer per maildir:
 
   maildir = Maildir.new 'Maildir'
   maildir.serializer = Maildir::Serializer::JSON.new
 
-As of version 1.0.0, the Maildir::Serializer::Base can write IO streams as well as strings. For example:
-
-  message.add(STDIN)
-
-This will use the more efficient IO.copy_stream method from Ruby 1.9+ if
-available, and degrade gracefully in Ruby 1.8. (Important note: Please be aware
-that Ruby 1.8.x is no longer officially supported by the maildir gem; see
-[.travis.yml](https://github.com/ktheory/maildir/blob/master/.travis.yml) for a
-list of currently-supported Ruby versions.)
-
-As of version 1.0.2, serializers are autoloaded. Thus it is no longer necessary to manually require them.
-
-The Mail serializer takes a ruby Mail object (http://github.com/mikel/mail) and writes RFC2822 email messages.
-
-  maildir.serializer = Maildir::Serializer::Mail.new
-  mail = Mail.new(...)
-  message = maildir.add(mail) # writes an RFC2822 message to disk
-  message.data == mail # => true; data is parsed as a Mail object
-
-The Marshal, JSON, and YAML serializers work similarly. E.g.:
+The JSON and YAML serializers work similarly. E.g.:
 
   maildir.serializer = Maildir::Serializer::JSON.new
   my_data = {"foo" => nil, "my_array" => [1,2,3]}
@@ -149,19 +126,8 @@ It's trivial to create a custom serializer. Implement the following two methods:
 
 == Author
 
-* Aaron Suggs (github[http://github.com/ktheory])
-
-== Maintainer
-
-* Todd A. Jacobs (github[http://github.com/codegnome])
-
-== Contributors
-
-* Niklas E. Cathor (github[http://github.com/nilclass])
-* Ali Polatel (github[http://github.com/alip])
-* Harry Vangberg (github[http://github.com/vangberg])
-* Alexander Flatter (github[http://github.com/aflatter])
+* user docelic (github[http://github.com/docelic])
 
 == Copyright
 
-Copyright (c) 2010-2014 Aaron Suggs. See LICENSE for details.
+Copyright (c) 2017 user docelic. See LICENSE for details.
