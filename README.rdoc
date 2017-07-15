@@ -46,12 +46,17 @@ Indeed, the message is in cur, not new.
   maildir.list("new") # => []
   maildir.list("cur") # => [message]
 
-Add some flags to the message to indicate state. See "What can I put in info" at http://cr.yp.to/proto/maildir.html for flag conventions.
+Add some flags to the message to indicate state.
+See "What can I put in info" at http://cr.yp.to/proto/maildir.html for flag conventions.
+The library has convenience methods like "seen!" and "seen?" for all of the 6 standard flags, but arbitrary flags can be set.
 
   message.add_flag("S") # Mark the message as "seen"
   message.add_flag("F") # Mark the message as "flagged"
-  message.remove_flag("F") # unflag the message
+  message.remove_flag("F") # Unflag the message
+  message.add_flag("DPR") # Mark the message as "draft", "passed" and "replied"
+  message.remove_flag("DPR") # Remove the three flags
   message.add_flag("T") # Mark the message as "trashed"
+  message.add_flag("X") # Add arbitrary-letter flag
 
 List "cur" messages based on flags.
 
