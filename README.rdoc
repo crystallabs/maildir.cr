@@ -67,7 +67,7 @@ List "cur" messages based on flags.
 
  # Flags must be specified in acending ASCII order ('ST' and not 'TS').
 
-Get a key to uniquely identify the message
+Get a key that uniquely identifies the message
 
   key = message.key
 
