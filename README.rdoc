@@ -108,8 +108,6 @@ The following serializers are included:
 * Maildir::Serializer::JSON (uses #to_json and JSON#parse)
 * Maildir::Serializer::YAML (uses #to_yaml and YAML#parse)
 
-Maildir::Serializer::Base simply reads and writes strings to disk.
-
 `Maildir.serializer` and `Maildir.serializer=` allow you to set default serializer.
 
   Maildir.serializer # => Maildir::Serializer::Base.new (default)
@@ -143,4 +141,4 @@ This module was initially converted from Ruby's implementation on https://github
 
 == Copyright
 
-Copyright (c) 2017 Davor Ocelic. See LICENSE for details.
+Copyright (c) 2017 Davor Ocelic. License: MIT. See LICENSE for details.
