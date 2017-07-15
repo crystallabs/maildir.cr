@@ -3,10 +3,6 @@
 A Crystal library for reading and writing files in the "Maildir" file and directory structure.
 Even though this format is mainly used for email messages, the Maildir structure and the implementation of this module are general - they do not require the file contents to be related to email.
 
-== Is it any good?
-
-Yes!
-
 == What's so great about the Maildir format
 
 See http://cr.yp.to/proto/maildir.html and http://en.wikipedia.org/wiki/Maildir
@@ -60,7 +56,7 @@ The library has convenience methods like "seen!" and "seen?" for all of the 6 st
   message.add_flag("DPR") # Mark the message as "draft", "passed" and "replied"
   message.remove_flag("DPR") # Remove the three flags
   message.add_flag("T") # Mark the message as "trashed"
-  message.add_flag("X") # Add arbitrary-letter flag
+  message.add_flag("X") # Mark with arbitrary-letter flag
 
 List "cur" messages based on flags.
 
