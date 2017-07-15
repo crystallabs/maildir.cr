@@ -3,7 +3,7 @@
 A Crystal library for reading and writing files in the "Maildir" file and directory structure.
 Even though this format is mainly used for email messages, the Maildir structure and the implementation of this module are general - they do not require the file contents to be related to email.
 
-== What's so great about the Maildir format
+== What's so Great About the Maildir Format
 
 See http://cr.yp.to/proto/maildir.html and http://en.wikipedia.org/wiki/Maildir
 
@@ -15,7 +15,7 @@ New messages are initially written to a "tmp" directory with an automatically-ge
 
 While the maildir format was created for email, it works well for arbitrary data. This library can read and write email messages or arbitrary data. See Pluggable serializers for more.
 
-== Install
+== Installation
 
  dependencies:
    maildir:
@@ -85,7 +85,7 @@ Delete the message from disk
   message.destroy # => returns the frozen message
   maildir.list("cur") # => []
 
-=== Cleaning up from orphaned messages
+=== Cleaning up Orphaned Messages
 
 An expected (though rare) behavior is for partially-written messages to be
 orphaned in the tmp folder (when clients fail before fully writing a message).
@@ -98,15 +98,15 @@ Clean them up:
 
   maildir.get_stale_tmp.each{|msg| msg.destroy}
 
-== Pluggable serializers
+== Pluggable Serializers
 
 By default, message data are written and read from disk as a string. It's often desirable to process the string into a useful object. Maildir supports configurable serializers to convert message data into a useful object.
 
 The following serializers are included:
 
-* Maildir::Serializer::Base (default)
-* Maildir::Serializer::JSON
-* Maildir::Serializer::YAML
+* Maildir::Serializer::Base (default - no serialization, writes and reads contents as string)
+* Maildir::Serializer::JSON (uses #to_json and JSON#parse)
+* Maildir::Serializer::YAML (uses #to_yaml and YAML#parse)
 
 Maildir::Serializer::Base simply reads and writes strings to disk.
 
@@ -116,7 +116,7 @@ Maildir::Serializer::Base simply reads and writes strings to disk.
   message = maildir.add("Hello, Crystal!") # writes "Hello, Crystal!" to disk
   message.data # => "Hello, Crystal!"
 
-You can also set the serializer per maildir:
+You can also set the serializer per individual maildir:
 
   maildir = Maildir.new 'Maildir'
   maildir.serializer = Maildir::Serializer::JSON.new
