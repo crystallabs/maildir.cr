@@ -23,11 +23,11 @@ While the maildir format was created for email, it works well for arbitrary data
 
 == Usage
 
-Create a maildir in /home/user/mail
+Create a maildir in /tmp/maildir_test
 
   require "maildir"
-  maildir = Maildir.new("/home/user/mail") # creates tmp, new, and cur dirs
-  # To skip directory creation, call Maildir.new("/home/user/mail", false)
+  maildir = Maildir.new("/tmp/maildir_test") # creates tmp, new, and cur dirs
+  # To skip directory creation, call Maildir.new("/tmp/maildir_test", false)
 
 Add a new message. This creates a new file with the contents "Hello, Crystal!"; returns the path fragment to the file. Messages are written to the tmp dir then moved to new.
 
