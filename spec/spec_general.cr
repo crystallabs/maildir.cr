@@ -14,12 +14,15 @@ it "works!" do
   message.add_flag("S") # Mark the message as "seen"
   message.add_flag("F") # Mark the message as "flagged"
   message.remove_flag("F") # unflag the message
+  message.add_flag("DPR") # Mark the message as "draft", "passed" and "replied"
+  message.remove_flag("DPR") # Remove the three flags
   message.add_flag("T") # Mark the message as "trashed"
+  message.add_flag("X") # Add arbitrary-letter flag
 
   maildir.list("cur",  {:flags => "F"}).size.should eq 0
   maildir.list("cur",  {:flags => "FS"}).size.should eq 0
   maildir.list("cur",  {:flags => ""}).size.should eq 0
-  maildir.list("cur",  {:flags => "ST"}).size.should eq 1
+  maildir.list("cur",  {:flags => "STX"}).size.should eq 1
 
   key= message.key
   data= message.data

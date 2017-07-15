@@ -111,11 +111,11 @@ class Maildir
     end
 
     FLAG_NAMES = {
-      passed: "P",
+      passed:  "P",
       replied: "R",
-      seen: "S",
+      seen:    "S",
       trashed: "T",
-      draft: "D",
+      draft:   "D",
       flagged: "F"
     }
 

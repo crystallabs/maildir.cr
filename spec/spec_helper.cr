@@ -3,7 +3,11 @@ require "../src/maildir.cr"
 
 # Create a reusable maildir
 def temp_maildir
-  m= Maildir.new("/tmp/maildir_test")
+  dir= "/tmp/maildir_test"
+  if File.exists? dir
+    raise "Directory #{dir} already exists; please remove before running the test"
+  end
+  m= Maildir.new dir
   raise "Missing maildir!" unless m
   m
 end
