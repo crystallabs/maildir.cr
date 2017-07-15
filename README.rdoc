@@ -3,6 +3,10 @@
 A Crystal library for reading and writing files in the "Maildir" file and directory structure.
 Even though this format is mainly used for email messages, the Maildir structure and the implementation of this module are general - they do not require the file contents to be related to email.
 
+== Is it any good?
+
+Yes!
+
 == What's so great about the Maildir format
 
 See http://cr.yp.to/proto/maildir.html and http://en.wikipedia.org/wiki/Maildir
