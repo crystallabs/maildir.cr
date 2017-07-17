@@ -17,9 +17,13 @@ While the maildir format was created for email, it works well for arbitrary data
 
 == Installation
 
+Add the following to your application's "shard.yml":
+
  dependencies:
    maildir:
      github: docelic/maildir.cr
+
+And run "shards install".
 
 == Usage
 
