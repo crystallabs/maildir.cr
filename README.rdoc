@@ -13,7 +13,7 @@ The maildir format allows multiple processes to read and write arbitrary message
 
 New messages are initially written to a "tmp/" directory with an automatically-generated unique filename. Once they are written, they are atomically moved to the "new/" directory where other processes can see and use them.
 
-While the maildir format was created for email, it works well for arbitrary data. This library can read and write any file contents, using the Maildir file and directory structure. And if you want file contents to be automatically serialized/deserialized objects, pluggable serializers are supported as well.
+While the maildir format was created for email, it works well for arbitrary data. This library can read and write any contents using the Maildir file and directory structure. And if you want file contents to be automatically serialized/deserialized objects, pluggable serializers are supported as well.
 
 == Installation
 
