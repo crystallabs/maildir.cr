@@ -11,9 +11,9 @@ See http://cr.yp.to/proto/maildir.html and http://en.wikipedia.org/wiki/Maildir
 
 The maildir format allows multiple processes to read and write arbitrary messages without file locks.
 
-New messages are initially written to a "tmp" directory with an automatically-generated unique filename. After the message is written, it's moved to the "new" directory where other processes may read it.
+New messages are initially written to a "tmp/" directory with an automatically-generated unique filename. Once they are written, they are atomically moved to the "new/" directory where other processes can see and use them.
 
-While the maildir format was created for email, it works well for arbitrary data. This library can read and write email messages or any other contents. Pluggable serializers are supported as well.
+While the maildir format was created for email, it works well for arbitrary data. This library can read and write any file contents, using the Maildir file and directory structure. And if you want file contents to be automatically serialized/deserialized objects, pluggable serializers are supported as well.
 
 == Installation
 
@@ -23,13 +23,13 @@ While the maildir format was created for email, it works well for arbitrary data
 
 == Usage
 
-Create a maildir in /tmp/maildir_test
+Initialize a maildir and create a maildir directory structure in /tmp/maildir_test
 
   require "maildir"
   maildir = Maildir.new("/tmp/maildir_test") # creates tmp, new, and cur dirs
   # To skip directory creation, call Maildir.new("/tmp/maildir_test", false)
 
-Add a new message. This creates a new file with the contents "Hello, Crystal!"; returns the path fragment to the file. Messages are written to the tmp dir then moved to new.
+Add a new message. This will create a new file with the contents "Hello, Crystal!" and return the path to the file. As mentioned, messages are written to the "tmp/" directory and then moved to "new/". The path returned refers to the location in "new/".
 
   message = maildir.add("Hello, Crystal!")
 
@@ -37,11 +37,11 @@ List new messages
 
   maildir.list("new") # => [message]
 
-Move the message from "new" to "cur" to indicate that some process has retrieved the message.
+Move the message from "new" to "cur" to indicate that some process has retrieved and/or processed the message.
 
   message.process
 
-Indeed, the message is in cur, not new.
+Indeed, the message is now in "cur/", not "new/".
 
   maildir.list("new") # => []
   maildir.list("cur") # => [message]
@@ -58,39 +58,39 @@ The library has convenience methods like "seen!" and "seen?" for all of the 6 st
   message.add_flag("T") # Mark the message as "trashed"
   message.add_flag("X") # Mark with arbitrary-letter flag
 
-List "cur" messages based on flags.
+List "cur/" messages based on flags.
 
   maildir.list("cur", :flags => '') # => lists all messages without any flags
   maildir.list("cur", :flags => 'F') # => lists all messages with flag 'F
   maildir.list("cur", :flags => 'FS') # => lists all messages with flag 'F' and 'S'
   maildir.list("cur", :flags => 'ST') # => lists all messages with flag 'S' and 'T'
 
- # Flags must be specified in acending ASCII order ('ST' and not 'TS').
+ # Flags must be specified in acending ASCII order ("ST" and not "TS").
 
-Get a key that uniquely identifies the message
+Retrieve the key that uniquely identifies the message
 
   key = message.key
 
-Load the contents of the message
+Read/load the contents of the message
 
   data = message.data
 
-Find the message based using the key
+Find the message based on key
 
   message_copy = maildir.get(key)
   message == message_copy # => true
 
 Delete the message from disk
 
-  message.destroy # => returns the frozen message
+  message.destroy
   maildir.list("cur") # => []
 
-=== Cleaning up Orphaned Messages
+Cleaning up Orphaned Messages
 
 An expected (though rare) behavior is for partially-written messages to be
-orphaned in the tmp folder (when clients fail before fully writing a message).
+orphaned in the "tmp/" folder (when clients fail before fully writing a message).
 
-Find messages in tmp that haven't been changed in 36 hours:
+Find messages in "tmp/" that haven't been changed in 36 hours:
 
   maildir.get_stale_tmp
 
@@ -98,9 +98,11 @@ Clean them up:
 
   maildir.get_stale_tmp.each{|msg| msg.destroy}
 
+For more usage examples, please see files in the library's folder "spec/".
+
 == Pluggable Serializers
 
-By default, message data are written and read from disk as a string. It's often desirable to process the string into a useful object. Maildir supports configurable serializers to convert message data into a useful object.
+By default, message data are written and read from disk as a string. However, it may be desirable to automatically process strings into useful objects. This library supports configurable serializers to convert objects to strings and back.
 
 The following serializers are included:
 
@@ -110,7 +112,7 @@ The following serializers are included:
 
 `Maildir.serializer` and `Maildir.serializer=` allow you to set default serializer.
 
-  Maildir.serializer # => Maildir::Serializer::Base.new (default)
+  Maildir.serializer # => Maildir::Serializer::Base.new (default serializer - strings)
   message = maildir.add("Hello, Crystal!") # writes "Hello, Crystal!" to disk
   message.data # => "Hello, Crystal!"
 
@@ -119,14 +121,14 @@ You can also set the serializer per individual maildir:
   maildir = Maildir.new 'Maildir'
   maildir.serializer = Maildir::Serializer::JSON.new
 
-The JSON and YAML serializers work similarly. E.g.:
+And the JSON and YAML serializers work similarly, e.g.:
 
   maildir.serializer = Maildir::Serializer::JSON.new
   my_data = {"foo" => nil, "my_array" => [1,2,3]}
   message = maildir.add(my_data) # writes {"foo":null,"my_array":[1,2,3]}
   message.data == my_data # => true
 
-It's trivial to create a custom serializer. Implement the following two methods:
+It is trivial to create a custom serializer. Just implement the following two methods:
 
   load(path)
   dump(data, path)
