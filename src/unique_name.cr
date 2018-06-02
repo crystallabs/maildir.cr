@@ -39,7 +39,7 @@ class Maildir
     # The middle part contains the microsecond, the process id, and a
     # per-process incrementing counter
     protected def middle
-      "M"+ ("%06d" % microsecond)+ "P#{process_id}Q#{delivery_count}"
+      "M"+ microsecond.to_s+ "P#{process_id}Q#{delivery_count}"
     end
 
     # The right part is the hostname
@@ -51,7 +51,7 @@ class Maildir
     protected def microsecond
       # Crystal will have TicksPerMicrosecond after https://github.com/crystal-lang/crystal/pull/4707
       # Until that's included and #microsecond is added, here's our custom implementation:
-      ((@now.ticks & Time::TicksMask) % Time::Span::TicksPerSecond / 10_i64).to_s
+      @now.epoch_ms.to_s
     end
 
     protected def process_id

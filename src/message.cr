@@ -206,7 +206,6 @@ class Maildir
     # if the file is missing. When +blocks+ fails and +reraise+ is false, returns
     # false, otherwise reraises Errno::ENOENT
     protected def guard(reraise = false, &block)
-      begin
         yield
       rescue e : Errno
         if e.errno== Errno::ENOENT
@@ -222,7 +221,6 @@ class Maildir
         end
 
         reraise ? raise(Exception.new) : false
-      end
     end
 
     # Sets dir, unique_name, and info based on the key
