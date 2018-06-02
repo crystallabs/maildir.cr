@@ -1,3 +1,7 @@
+[![Build Status](https://travis-ci.com/crystallabs/maildir.cr.svg?branch=master)](https://travis-ci.com/crystallabs/maildir.cr)
+[![Version](https://img.shields.io/github/tag/crystallabs/maildir.cr.svg?maxAge=360)](https://github.com/crystallabs/maildir.cr/releases/latest)
+[![License](https://img.shields.io/github/license/crystallabs/maildir.cr.svg)](https://github.com/crystallabs/maildir.cr/blob/master/LICENSE)
+
 = Maildir
 
 A Crystal library for reading and writing files in the "Maildir" file and directory structure.
