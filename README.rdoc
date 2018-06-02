@@ -1,6 +1,9 @@
-{<img src="https://travis-ci.com/crystallabs/maildir.cr.svg?branch=master" alt="Build Status" />}[https://travis-ci.com/crystallabs/maildir.cr]
-{<img src="https://img.shields.io/github/tag/crystallabs/maildir.cr.svg?maxAge=360" alt="Version" />}[https://github.com/crystallabs/maildir.cr/releases/latest]
+Version and license: {<img src="https://img.shields.io/github/tag/crystallabs/maildir.cr.svg?maxAge=360" alt="Version" />}[https://github.com/crystallabs/maildir.cr/releases/latest]
 {<img src="https://img.shields.io/github/license/crystallabs/maildir.cr.svg" alt="License" />}[https://github.com/crystallabs/maildir.cr/blob/master/LICENSE]
+
+Build status: {<img src="https://travis-ci.com/crystallabs/maildir.cr.svg?branch=master" alt="Build Status" />}[https://travis-ci.com/crystallabs/maildir.cr]
+
+Project status: [ ] Early stage and development [X] Usable [X] Complete [ ] 
 
 = Maildir
 
