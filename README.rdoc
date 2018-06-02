@@ -2,7 +2,7 @@
 {<img src="https://img.shields.io/github/tag/crystallabs/maildir.cr.svg?maxAge=360" alt="Version" />}[https://github.com/crystallabs/maildir.cr/releases/latest]
 {<img src="https://img.shields.io/github/license/crystallabs/maildir.cr.svg" alt="License" />}[https://github.com/crystallabs/maildir.cr/blob/master/LICENSE]
 
-<b>Project status</b>: <tt>[ ] Being developed  [X] Usable  [X] Complete</tt>
+<b>Project status</b>: <tt>[ ] Being developed  [X] Usable  [X] Functionally complete</tt>
 
 = Maildir
 
