@@ -1,0 +1,154 @@
+{<img src="https://travis-ci.com/crystallabs/maildir.cr.svg?branch=master" alt="Build Status" />}[https://travis-ci.com/crystallabs/maildir.cr]
+{<img src="https://img.shields.io/github/tag/crystallabs/maildir.cr.svg?maxAge=360" alt="Version" />}[https://github.com/crystallabs/maildir.cr/releases/latest]
+{<img src="https://img.shields.io/github/license/crystallabs/maildir.cr.svg" alt="License" />}[https://github.com/crystallabs/maildir.cr/blob/master/LICENSE]
+
+= Maildir
+
+A Crystal library for reading and writing files in the "Maildir" file and directory structure.
+Even though this format is mainly used for email messages, the Maildir structure and the implementation of this module are general - they do not require the file contents to be related to email.
+
+== What's so Great About the Maildir Format
+
+See http://cr.yp.to/proto/maildir.html and http://en.wikipedia.org/wiki/Maildir
+
+"Two words: no locks." -- Daniel J. Bernstein
+
+The maildir format allows multiple processes to read and write arbitrary messages without file locks.
+
+New messages are initially written to a "tmp/" directory with an automatically-generated unique filename. Once they are written, they are atomically moved to the "new/" directory where other processes can see and use them.
+
+While the maildir format was created for email, it works well for arbitrary data. This library can read and write any contents using the Maildir file and directory structure. And if you want the contents to be automatically serialized/deserialized objects, pluggable serializers are supported as well.
+
+== Installation
+
+Add the following to your application's "shard.yml":
+
+ dependencies:
+   maildir:
+     github: docelic/maildir.cr
+
+And run "shards install".
+
+== Usage
+
+Initialize a maildir and create a maildir directory structure in /tmp/maildir_test
+
+  require "maildir"
+  maildir = Maildir.new("/tmp/maildir_test") # creates tmp, new, and cur dirs
+  # To skip directory creation, call Maildir.new("/tmp/maildir_test", false)
+
+Add a new message. This will create a new file with the contents "Hello, Crystal!" and return the path to the file. As mentioned, messages are written to the "tmp/" directory and then moved to "new/". The path returned refers to the location in "new/".
+
+  message = maildir.add("Hello, Crystal!")
+
+List new messages
+
+  maildir.list("new") # => [message]
+
+Move the message from "new" to "cur" to indicate that some process has retrieved and/or processed the message.
+
+  message.process
+
+Indeed, the message is now in "cur/", not "new/".
+
+  maildir.list("new") # => []
+  maildir.list("cur") # => [message]
+
+Add some flags to the message to indicate state.
+See "What can I put in info" at http://cr.yp.to/proto/maildir.html for flag conventions.
+The library has convenience methods like "seen!" and "seen?" for all of the 6 standard flags, but arbitrary flags can be set.
+
+  message.add_flag("S") # Mark the message as "seen"
+  message.add_flag("F") # Mark the message as "flagged"
+  message.remove_flag("F") # Unflag the message
+  message.add_flag("DPR") # Mark the message as "draft", "passed" and "replied"
+  message.remove_flag("DPR") # Remove the three flags
+  message.add_flag("T") # Mark the message as "trashed"
+  message.add_flag("X") # Mark with arbitrary-letter flag
+
+List "cur/" messages based on flags.
+
+  maildir.list("cur", :flags => '') # => lists all messages without any flags
+  maildir.list("cur", :flags => 'F') # => lists all messages with flag 'F
+  maildir.list("cur", :flags => 'FS') # => lists all messages with flag 'F' and 'S'
+  maildir.list("cur", :flags => 'ST') # => lists all messages with flag 'S' and 'T'
+
+ # Flags must be specified in acending ASCII order ("ST" and not "TS").
+
+Retrieve the key that uniquely identifies the message
+
+  key = message.key
+
+Read/load the contents of the message
+
+  data = message.data
+
+Find the message based on key
+
+  message_copy = maildir.get(key)
+  message == message_copy # => true
+
+Delete the message from disk
+
+  message.destroy
+  maildir.list("cur") # => []
+
+Cleaning up Orphaned Messages
+
+An expected (though rare) behavior is for partially-written messages to be
+orphaned in the "tmp/" folder (when clients fail before fully writing a message).
+
+Find messages in "tmp/" that haven't been changed in 36 hours:
+
+  maildir.get_stale_tmp
+
+Clean them up:
+
+  maildir.get_stale_tmp.each{|msg| msg.destroy}
+
+For more usage examples, please see files in the library's folder "spec/".
+
+== Pluggable Serializers
+
+By default, message data are written and read from disk as a string. However, it may be desirable to automatically process strings into useful objects. This library supports configurable serializers to convert objects to strings and back.
+
+The following serializers are included:
+
+* Maildir::Serializer::Base (default - no serialization, writes and reads contents as string)
+* Maildir::Serializer::JSON (uses #to_json and JSON#parse)
+* Maildir::Serializer::YAML (uses #to_yaml and YAML#parse)
+
+`Maildir.serializer` and `Maildir.serializer=` allow you to set default serializer.
+
+  Maildir.serializer # => Maildir::Serializer::Base.new (default serializer - strings)
+  message = maildir.add("Hello, Crystal!") # writes "Hello, Crystal!" to disk
+  message.data # => "Hello, Crystal!"
+
+You can also set the serializer per individual maildir:
+
+  maildir = Maildir.new 'Maildir'
+  maildir.serializer = Maildir::Serializer::JSON.new
+
+And the JSON and YAML serializers work similarly, e.g.:
+
+  maildir.serializer = Maildir::Serializer::JSON.new
+  my_data = {"foo" => nil, "my_array" => [1,2,3]}
+  message = maildir.add(my_data) # writes {"foo":null,"my_array":[1,2,3]}
+  message.data == my_data # => true
+
+It is trivial to create a custom serializer. Just implement the following two methods:
+
+  load(path)
+  dump(data, path)
+
+== Author
+
+* Davor Ocelic (github[http://github.com/docelic])
+
+== History
+
+This module was initially converted from Ruby's implementation on https://github.com/ktheory/maildir
+
+== Copyright
+
+Copyright (c) 2017 Davor Ocelic. License: MIT. See LICENSE for details.
