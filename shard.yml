@@ -2,7 +2,7 @@ name: maildir
 version: 2.2.3
 
 authors:
-  - Davor Ocelic <docelic@spinlocksolutions.com>
+  - Davor Ocelic <docelic@crystallabs.io>
 
 crystal: 0.23.0
 
