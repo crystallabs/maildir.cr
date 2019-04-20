@@ -139,7 +139,7 @@ class Maildir
 
     # Sets the flags on a message.
     # Returns the message's key if successful, false otherwise.
-    def flags=(*flags)
+    def flags=(flags)
       self.info = INFO + sort_flags(flags.to_a.flatten.join(""))
     end
 

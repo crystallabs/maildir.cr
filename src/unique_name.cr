@@ -33,7 +33,7 @@ class Maildir
     # The left part of the unique name is the number of seconds from since the
     # UNIX epoch
     protected def left
-      @now.epoch.to_s
+      @now.to_unix.to_s
     end
 
     # The middle part contains the microsecond, the process id, and a
@@ -51,7 +51,7 @@ class Maildir
     protected def microsecond
       # Crystal will have TicksPerMicrosecond after https://github.com/crystal-lang/crystal/pull/4707
       # Until that's included and #microsecond is added, here's our custom implementation:
-      @now.epoch_ms.to_s
+      @now.to_unix_ms.to_s
     end
 
     protected def process_id
