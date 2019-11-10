@@ -2,8 +2,6 @@
 {<img src="https://img.shields.io/github/tag/crystallabs/maildir.cr.svg?maxAge=360" alt="Version" />}[https://github.com/crystallabs/maildir.cr/releases/latest]
 {<img src="https://img.shields.io/github/license/crystallabs/maildir.cr.svg" alt="License" />}[https://github.com/crystallabs/maildir.cr/blob/master/LICENSE]
 
-<b>Project status</b>: <tt>[ ] Being developed  [X] Usable  [X] Functionally complete</tt>
-
 = Maildir
 
 A Crystal library for reading and writing files in the "Maildir" file and directory structure.
@@ -143,14 +141,7 @@ It is trivial to create a custom serializer. Just implement the following two me
   load(path)
   dump(data, path)
 
-== Author
+== Similar projects
 
-* Davor Ocelic (github[http://github.com/docelic])
+- https://github.com/ktheory/maildir - Ruby implementation
 
-== History
-
-This module was initially converted from Ruby's implementation on https://github.com/ktheory/maildir
-
-== Copyright
-
-Copyright (c) 2017 Davor Ocelic. License: MIT. See LICENSE for details.
