@@ -126,7 +126,7 @@ class Maildir
 
   # Finds messages in the tmp folder that have not been modified since
   # +time+. +time+ defaults to 36 hours ago.
-  def get_stale_tmp(time = Time.now - 129_600.seconds)
+  def get_stale_tmp(time = Time.utc - 129_600.seconds)
     list("tmp").select do |message|
       (mtime = message.mtime) && mtime.is_a?(Time) && (mtime < time)
     end

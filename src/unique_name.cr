@@ -22,7 +22,7 @@ class Maildir
     # Return a unique file name based on strategy
     def initialize
       # Use the same time object
-      @now = Time.now
+      @now = Time.utc
     end
 
     # Return the name as a string
