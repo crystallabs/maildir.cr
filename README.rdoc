@@ -25,13 +25,14 @@ Add the following to your application's "shard.yml":
 
  dependencies:
    maildir:
-     github: docelic/maildir.cr
+     github: crystallabs/maildir.cr
+     version 5.0.1
 
 And run "shards install".
 
 == Usage
 
-Initialize a maildir and create a maildir directory structure in /tmp/maildir_test
+Initialize a Maildir and create a Maildir directory structure in "/tmp/maildir_test":
 
   require "maildir"
   maildir = Maildir.new("/tmp/maildir_test") # creates tmp, new, and cur dirs
