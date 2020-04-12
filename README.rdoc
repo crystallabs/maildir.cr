@@ -26,7 +26,7 @@ Add the following to your application's "shard.yml":
  dependencies:
    maildir:
      github: crystallabs/maildir.cr
-     version 5.0.1
+     version 6.0.0
 
 And run "shards install".
 

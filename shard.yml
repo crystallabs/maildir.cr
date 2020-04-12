@@ -1,10 +1,10 @@
 name: maildir
-version: 5.0.1
+version: 6.0.0
 
 authors:
   - Davor Ocelic <docelic@crystallabs.io>
 
-crystal: 0.32.0
+crystal: 0.34.0
 
 license: MIT
 

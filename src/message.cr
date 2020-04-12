@@ -207,18 +207,14 @@ class Maildir
     # false, otherwise reraises Errno::ENOENT
     protected def guard(reraise = false, &block)
         yield
-      rescue e : Errno
-        if e.errno== Errno::ENOENT
-          if ok= @old_key
-            # Restore ourselves to the old state
-            parse_key(ok)
-          end
+      rescue e : File::NotFoundError
+        if ok= @old_key
+          # Restore ourselves to the old state
+          parse_key(ok)
+        end
 
         #  # Don't allow further modifications
         #  #freeze
-        else
-          raise(Exception.new)
-        end
 
         reraise ? raise(Exception.new) : false
     end
