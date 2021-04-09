@@ -227,7 +227,7 @@ class Maildir
 
     # Ensure the flags are uppercase and sorted
     protected def sort_flags(flags)
-      flags.split("").map{|f| f.upcase}.sort!.uniq.join("")
+      flags.split("").map(&.upcase).sort!.uniq.join("")
     end
 
     protected def old_path

@@ -21,7 +21,7 @@ class Maildir
       end
 
       protected def write(data, path)
-        File.open(path, "w") {|file| file.write(data.to_s.to_slice)}
+        File.open path, "w", &.write(data.to_s.to_slice)
       end
     end
   end
