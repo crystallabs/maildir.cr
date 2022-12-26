@@ -44,11 +44,11 @@ class Maildir
   # Compare maildirs by their paths.
   # If maildir is a different class, return nil.
   # Otherwise, return 1, 0, or -1.
-  def <=>(maildir)
+  def <=>(other)
     # Return nil if comparing different classes
-    return nil unless self.class === maildir
+    return nil unless self.class === other
 
-    self.path <=> maildir.path
+    self.path <=> other.path
   end
 
   # Friendly inspect method
