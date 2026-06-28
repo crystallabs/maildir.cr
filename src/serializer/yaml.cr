@@ -1,4 +1,5 @@
 require "yaml"
+
 class Maildir
   module Serializer
     # Serialize messages as YAML

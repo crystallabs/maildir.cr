@@ -1,6 +1,3 @@
-require "mutex" # For mutex support
-require "socket" # For getting the hostname
-
 # Class for generating unique file names for new messages
 class Maildir
   class UniqueName
@@ -11,7 +8,7 @@ class Maildir
     # Return a thread-safe increasing counter
     def self.counter
       COUNTER_MUTEX.synchronize do
-        @@counter = @@counter.to_i.succ
+        @@counter += 1
       end
     end
 
@@ -39,12 +36,11 @@ class Maildir
     # The middle part contains the microsecond, the process id, and a
     # per-process incrementing counter
     protected def middle
-      "M"+ microsecond.to_s+ "P#{process_id}Q#{delivery_count}"
+      "M" + microsecond.to_s + "P#{process_id}Q#{delivery_count}"
     end
 
     # The right part is the hostname
     protected def right
-      #Socket.gethostname
       System.hostname
     end
 

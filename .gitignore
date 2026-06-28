@@ -1,0 +1,8 @@
+/docs/
+/lib/
+/bin/
+/.shards/
+*.dwarf
+
+# Shard.lock is unimportant for libraries.
+/shard.lock

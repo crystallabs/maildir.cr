@@ -1,5 +1,3 @@
-require "errno"
-
 class Maildir
   class Message
     # COLON seperates the unique name from the info
@@ -34,11 +32,11 @@ class Maildir
 
     getter :dir, :unique_name, :info
 
-    @info    : String | Nil
-    @key     : String | Nil
+    @info : String | Nil
+    @key : String | Nil
     @old_key : String | Nil
     @maildir : Maildir
-    @dir     : String | Nil
+    @dir : String | Nil
     @unique_name : String | Nil
 
     # Create a new, unwritten message or instantiate an existing message.
@@ -48,11 +46,11 @@ class Maildir
     # If +key+ is not nil, instantiate a message object for the message at
     # +key+.
     #   Message.new(maildir, key) # => an existing message
-    def initialize(maildir, key=nil)
+    def initialize(maildir, key = nil)
       @maildir = maildir
       if key.nil?
-        @dir         = "tmp"
-        @info        = nil
+        @dir = "tmp"
+        @info = nil
         @unique_name = Maildir::UniqueName.create
       else
         parse_key(key)
@@ -63,14 +61,9 @@ class Maildir
       end
     end
 
-    # Compares messages by their paths.
-    # If message is a different class, return nil.
-    # Otherwise, return 1, 0, or -1.
-    def <=>(other)
-      # Return nil if comparing different classes
-      return nil unless self.class === other
-
-      self.path <=> other.path
+    # Compares messages by their paths. Returns 1, 0, or -1.
+    def <=>(other : self)
+      path <=> other.path
     end
 
     # Friendly inspect method
@@ -116,25 +109,60 @@ class Maildir
       seen:    "S",
       trashed: "T",
       draft:   "D",
-      flagged: "F"
+      flagged: "F",
     }
 
-    def passed?()  flags.include?("P") end
-    def passed!()  add_flag("P") end
-    def replied?() flags.include?("R") end
-    def replied!() add_flag("R") end
-    def seen?()    flags.include?("S") end
-    def seen!()    add_flag("S") end
-    def trashed?() flags.include?("T") end
-    def trashed!() add_flag("T") end
-    def draft?()   flags.include?("D") end
-    def draft!()   add_flag("D") end
-    def flagged?() flags.include?("F") end
-    def flagged!() add_flag("F") end
+    def passed?
+      flags.includes?("P")
+    end
+
+    def passed!
+      add_flag("P")
+    end
+
+    def replied?
+      flags.includes?("R")
+    end
+
+    def replied!
+      add_flag("R")
+    end
+
+    def seen?
+      flags.includes?("S")
+    end
+
+    def seen!
+      add_flag("S")
+    end
+
+    def trashed?
+      flags.includes?("T")
+    end
+
+    def trashed!
+      add_flag("T")
+    end
+
+    def draft?
+      flags.includes?("D")
+    end
+
+    def draft!
+      add_flag("D")
+    end
+
+    def flagged?
+      flags.includes?("F")
+    end
+
+    def flagged!
+      add_flag("F")
+    end
 
     # Returns an array of single letter flags applied to the message
     def flags
-      @info.to_s.sub(INFO,"").split(//)
+      @info.to_s.sub(INFO, "").chars.map(&.to_s)
     end
 
     # Sets the flags on a message.
@@ -155,7 +183,7 @@ class Maildir
     # flags:: String or Array
     def remove_flag(flags)
       return self.flags if flags.blank?
-      self.flags = self.flags.reject { |f| f =~ /[#{flags}]/i }
+      self.flags = self.flags.reject { |flag| flag =~ /[#{flags}]/i }
     end
 
     # Returns the filename of the message
@@ -174,20 +202,15 @@ class Maildir
     end
 
     # Returns the message's data from disk.
-    # If the path doesn't exist, freeze's the object and raises Errno:ENOENT
+    # If the path doesn't exist, raises File::NotFoundError.
     def data
       guard(true) { serializer.load(path) }
     end
 
-    # Updates the modification and access time. Returns 1 if successful, false
-    # otherwise.
+    # Updates the modification and access time. Returns nil if successful, false
+    # if the file doesn't exist.
     def utime(atime, mtime)
       guard { File.utime(atime, mtime, path) }
-    end
-
-    # Returns the message's atime, or false if the file doesn't exist.
-    def atime
-      guard { File.info(path).atime }
     end
 
     # Returns the message's mtime, or false if the file doesn't exist.
@@ -195,34 +218,33 @@ class Maildir
       guard { File.info(path).modification_time }
     end
 
-    # Deletes the message path and freezes the message object.
-    # Returns 1 if the file was destroyed, false if the file was missings.
+    # Deletes the message path.
+    # Returns nil if the file was destroyed, false if the file was missing.
     def destroy
-      #freeze
       guard { File.delete(path) }
     end
 
-    # Guard access to the file system by rescuing Errno::ENOENT, which happens
-    # if the file is missing. When +blocks+ fails and +reraise+ is false, returns
-    # false, otherwise reraises Errno::ENOENT
-    protected def guard(reraise = false, &block)
-        yield
-      rescue e : File::NotFoundError
-        if ok= @old_key
-          # Restore ourselves to the old state
-          parse_key(ok)
-        end
+    # Guard access to the file system by rescuing File::NotFoundError, which
+    # happens if the file is missing. When the block fails and +reraise+ is
+    # false, returns false, otherwise reraises the original error.
+    protected def guard(reraise = false, &)
+      yield
+    rescue e : File::NotFoundError
+      if ok = @old_key
+        # Restore ourselves to the old state
+        parse_key(ok)
+      end
 
-        #  # Don't allow further modifications
-        #  #freeze
-
-        reraise ? raise(Exception.new) : false
+      reraise ? raise(e) : false
     end
 
     # Sets dir, unique_name, and info based on the key
     protected def parse_key(key)
       @dir, filename = key.split(File::SEPARATOR)
-      @unique_name, _, @info = filename.partition(COLON)
+      @unique_name, sep, info = filename.partition(COLON)
+      # A missing info part (new/tmp messages) must stay nil, otherwise #filename
+      # would re-append a stray trailing colon and no longer match the real file.
+      @info = sep.empty? ? nil : info
     end
 
     # Ensure the flags are uppercase and sorted
@@ -231,11 +253,11 @@ class Maildir
     end
 
     protected def old_path
-      File.join(@maildir.path, @old_key||"")
+      File.join(@maildir.path, @old_key || "")
     end
 
     # Renames the message. Returns the new key if successful, false otherwise.
-    protected def rename(new_dir, new_info=nil)
+    protected def rename(new_dir, new_info = nil)
       # Save the old key so we can revert to the old state
       @old_key = key
 

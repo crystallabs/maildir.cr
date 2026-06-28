@@ -1,4 +1,4 @@
-<b>Build status</b>: {<img src="https://travis-ci.com/crystallabs/maildir.cr.svg?branch=master" alt="Build Status" />}[https://travis-ci.com/crystallabs/maildir.cr]
+<b>Build status</b>: {<img src="https://github.com/crystallabs/maildir.cr/actions/workflows/ci.yml/badge.svg" alt="Build Status" />}[https://github.com/crystallabs/maildir.cr/actions/workflows/ci.yml]
 {<img src="https://img.shields.io/github/tag/crystallabs/maildir.cr.svg?maxAge=360" alt="Version" />}[https://github.com/crystallabs/maildir.cr/releases/latest]
 {<img src="https://img.shields.io/github/license/crystallabs/maildir.cr.svg" alt="License" />}[https://github.com/crystallabs/maildir.cr/blob/master/LICENSE]
 

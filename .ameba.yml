@@ -1,0 +1,4 @@
+# Ameba configuration. Run `ameba` to lint, `ameba --fix` to autocorrect.
+Documentation/DocumentationAdmonition:
+  # TODO/FIXME notes are allowed to live in comments; don't fail the build on them.
+  Enabled: false

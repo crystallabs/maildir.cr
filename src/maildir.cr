@@ -3,7 +3,6 @@ require "file_utils" # For mkdir_p
 require "./**"
 
 class Maildir
-
   SUBDIRS = {"tmp", "new", "cur"}
 
   include Comparable(self)
@@ -31,7 +30,7 @@ class Maildir
   # required subdirectories exist.
   def initialize(path, create = true)
     @path = File.expand_path(path)
-    @path = File.join(@path, "/") # Ensure path has a trailing slash
+    @path = File.join(@path, "/")                      # Ensure path has a trailing slash
     @path_regexp = Regex.new "^#{Regex.escape(@path)}" # For parsing directory listings
     create_directories if create
   end
@@ -41,14 +40,9 @@ class Maildir
     @serializer ||= @@serializer
   end
 
-  # Compare maildirs by their paths.
-  # If maildir is a different class, return nil.
-  # Otherwise, return 1, 0, or -1.
-  def <=>(other)
-    # Return nil if comparing different classes
-    return nil unless self.class === other
-
-    self.path <=> other.path
+  # Compare maildirs by their paths. Returns 1, 0, or -1.
+  def <=>(other : self)
+    path <=> other.path
   end
 
   # Friendly inspect method
@@ -57,9 +51,17 @@ class Maildir
   end
 
   # define methods tmp_path, new_path, & cur_path
-  def tmp_path() File.join(@path, "tmp") end
-  def cur_path() File.join(@path, "cur") end
-  def new_path() File.join(@path, "new") end
+  def tmp_path
+    File.join(@path, "tmp")
+  end
+
+  def cur_path
+    File.join(@path, "cur")
+  end
+
+  def new_path
+    File.join(@path, "new")
+  end
 
   # Ensure subdirectories exist. This can safely be called multiple times, but
   # must hit the disk. Avoid calling this if you're certain the directories
@@ -92,7 +94,7 @@ class Maildir
 
     # Set flags to filter messages
     # Silently ignored if dir is :new
-    flags = (dir== "cur") ? options[:flags]? : nil
+    flags = (dir == "cur") ? options[:flags]? : nil
     keys = get_dir_listing(dir, {flags: flags})
 
     # Sort the keys (chronological order)
@@ -100,12 +102,12 @@ class Maildir
     keys.sort!
 
     # Apply the limit after sorting
-    if (limit = options[:limit]?) && (limit.is_a? Int) && (limit< keys.size)
-      keys = keys[0,limit]
+    if (limit = options[:limit]?) && (limit.is_a? Int) && (limit < keys.size)
+      keys = keys[0, limit]
     end
 
     # Map keys to message objects
-    keys.map{|key| get(key)}
+    keys.map { |key| get(key) }
   end
 
   # Writes data object out as a new message. Returns a Maildir::Message. See
@@ -133,9 +135,9 @@ class Maildir
   end
 
   # Returns an array of keys in dir
-  protected def get_dir_listing(dir, options={} of Symbol => String | Nil)
-  	filter = "*"
-  	filter = "#{filter}:2,#{options[:flags]}" if options[:flags]?
+  protected def get_dir_listing(dir, options = {} of Symbol => String | Nil)
+    filter = "*"
+    filter = "#{filter}:2,#{options[:flags]}" if options[:flags]?
     search_path = File.join(self.path, dir.to_s, filter)
     keys = Dir.glob(search_path)
     #  Remove the maildir's path from the keys

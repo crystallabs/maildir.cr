@@ -13,10 +13,8 @@ class Maildir
         File.read path
       end
 
-      # XXX
+      # Writes data to the file at path. Returns the number of bytes written.
       def dump(data, path)
-        # IO.copy_stream(data, path)
-        # write(data.read, path)
         write(data, path)
       end
 
