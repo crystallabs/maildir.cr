@@ -1,8 +1,12 @@
 /docs/
 /lib/
-/bin/
+/bin/*
 /.shards/
 *.dwarf
+
+# Ameba is built from this wrapper rather than installed by shards, so unlike
+# the binary it produces, the wrapper is kept.
+!/bin/ameba.cr
 
 # Shard.lock is unimportant for libraries.
 /shard.lock

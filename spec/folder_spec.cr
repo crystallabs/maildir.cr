@@ -8,7 +8,7 @@ require "./spec_helper"
 # |-- b
 def maildir_with_folders
   maildir = temp_maildir
-  %w(a b a.x a.y).each { |name| maildir.folder(name) }
+  %w[a b a.x a.y].each { |name| maildir.folder(name) }
   maildir
 end
 

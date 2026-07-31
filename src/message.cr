@@ -13,7 +13,7 @@ class Maildir
     #   message = Maildir::Message.new(maildir)
     #   message.write(data)
     def self.create(maildir, data)
-      message = self.new(maildir)
+      message = new(maildir)
       message.write(data)
       message
     end
@@ -131,15 +131,15 @@ class Maildir
     }
 
     {% for name, flag in FLAG_NAMES %}
-      # Returns true if the message carries the "{{flag.id}}" ({{name.id}}) flag.
-      def {{name.id}}?
-        flags.includes?({{flag}})
+      # Returns true if the message carries the "{{ flag.id }}" ({{ name.id }}) flag.
+      def {{ name.id }}?
+        flags.includes?({{ flag }})
       end
 
-      # Adds the "{{flag.id}}" ({{name.id}}) flag to the message.
+      # Adds the "{{ flag.id }}" ({{ name.id }}) flag to the message.
       # Returns the message's key if successful, false otherwise.
-      def {{name.id}}!
-        add_flag({{flag}})
+      def {{ name.id }}!
+        add_flag({{ flag }})
       end
     {% end %}
 

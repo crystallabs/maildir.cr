@@ -10,4 +10,7 @@ license: AGPL-3.0
 
 development_dependencies:
   ameba:
-    github: veelenga/ameba
+    # Tracking master: the last release (1.6.4) no longer compiles against
+    # current Crystal, which removed Crystal::Lexer#next_string_array_token.
+    github: crystal-ameba/ameba
+    branch: master

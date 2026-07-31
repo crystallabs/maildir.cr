@@ -24,7 +24,7 @@ class Maildir
     end
 
     def self.create
-      self.new.to_s
+      new.to_s
     end
 
     # Return a unique file name based on strategy

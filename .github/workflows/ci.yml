@@ -21,7 +21,7 @@ jobs:
         run: crystal tool format --check
 
       - name: Run ameba
-        run: ./bin/ameba
+        run: crystal run bin/ameba.cr
 
       - name: Run specs
         run: crystal spec

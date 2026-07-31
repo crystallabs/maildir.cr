@@ -154,7 +154,7 @@ class Maildir
 
   # The Maildir++ name of this folder ("a", "a.x"), or nil for a root maildir.
   def folder_name : String?
-    return nil unless folder?
+    return unless folder?
     File.basename(bare_path).lchop(FOLDER_PREFIX)
   end
 
@@ -166,7 +166,7 @@ class Maildir
 
   # The maildir this folder is nested in, or nil for a root maildir.
   def parent : Maildir?
-    return nil unless name = folder_name
+    return unless name = folder_name
     if separator = name.rindex(FOLDER_SEPARATOR)
       Maildir.new(File.join(root.path, FOLDER_PREFIX + name[0, separator]), false)
     else
@@ -239,7 +239,7 @@ class Maildir
   # E.g.
   #  maildir.list("new") # => all new messages
   #  maildir.list("cur", {:limit => 10}) # => 10 oldest messages in cur
-  def list(dir : String, options = {} of Symbol => String | Int32 | Nil)
+  def list(dir : String, options = {} of Symbol => String | Int32?)
     unless SUBDIRS.includes? dir
       raise ArgumentError.new "dir must be one of #{SUBDIRS.inspect}"
     end
