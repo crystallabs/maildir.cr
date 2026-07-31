@@ -5,6 +5,16 @@ require "../src/maildir.cr"
 # Track temp maildirs so we can clean them all up after the suite runs.
 TEMP_MAILDIRS = [] of String
 
+# A serializer that records how often it flushed a message to disk.
+class CountingSerializer < Maildir::Serializer::Base
+  getter syncs = 0
+
+  protected def sync(file : File) : Nil
+    @syncs += 1
+    super
+  end
+end
+
 # Create a fresh, isolated maildir in a unique temp directory.
 def temp_maildir
   dir = File.join(Dir.tempdir, "maildir_test_#{Process.pid}_#{TEMP_MAILDIRS.size}")
@@ -13,20 +23,9 @@ def temp_maildir
   Maildir.new(dir)
 end
 
-# Create the subdir tree:
-# | INBOX
-# |-- a
-# |   |-- x
-# |   |-- y
-# |-- b
-def setup_subdirs(maildir)
-  %w(a b a.x a.y).each do |x|
-    Maildir.new(File.join(maildir.path, ".#{x}"))
-  end
-end
-
 Spec.after_suite do
   TEMP_MAILDIRS.each { |dir| FileUtils.rm_rf(dir) }
-  # Reset the global default serializer in case a spec changed it.
+  # Reset the global settings in case a spec changed them.
   Maildir.serializer = Maildir::Serializer::Base.new
+  Maildir.fsync = true
 end

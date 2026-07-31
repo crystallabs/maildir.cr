@@ -30,14 +30,26 @@ class Maildir
       Maildir.serializer = serializer
     end
 
-    getter :dir, :unique_name, :info
+    # Splits a key into its dir, unique name, and info parts.
+    # Raises ArgumentError if the key is not of the form "dir/unique_name[:info]".
+    def self.parse_key(key : String) : {String, String, String?}
+      dir, separator, filename = key.partition(File::SEPARATOR)
+      if separator.empty? || dir.empty? || filename.empty?
+        raise ArgumentError.new "Key must be of the form \"dir#{File::SEPARATOR}filename\", got #{key.inspect}"
+      end
 
-    @info : String | Nil
-    @key : String | Nil
-    @old_key : String | Nil
+      unique_name, separator, info = filename.partition(COLON)
+      # A missing info part (new/tmp messages) must stay nil, otherwise #filename
+      # would re-append a stray trailing colon and no longer match the real file.
+      {dir, unique_name, separator.empty? ? nil : info}
+    end
+
+    getter dir : String
+    getter unique_name : String
+    getter info : String?
+
+    @old_key : String?
     @maildir : Maildir
-    @dir : String | Nil
-    @unique_name : String | Nil
 
     # Create a new, unwritten message or instantiate an existing message.
     # If key is nil, create a new message:
@@ -46,14 +58,13 @@ class Maildir
     # If +key+ is not nil, instantiate a message object for the message at
     # +key+.
     #   Message.new(maildir, key) # => an existing message
-    def initialize(maildir, key = nil)
-      @maildir = maildir
+    def initialize(@maildir : Maildir, key : String? = nil)
       if key.nil?
         @dir = "tmp"
         @info = nil
         @unique_name = Maildir::UniqueName.create
       else
-        parse_key(key)
+        @dir, @unique_name, @info = Message.parse_key(key)
       end
 
       unless Maildir::SUBDIRS.includes? dir
@@ -66,9 +77,15 @@ class Maildir
       path <=> other.path
     end
 
+    def hash(hasher)
+      path.hash(hasher)
+    end
+
     # Friendly inspect method
-    def inspect
-      "#<#{self.class} key=#{key} maildir=#{@maildir.inspect}>"
+    def inspect(io : IO) : Nil
+      io << "#<" << self.class << " key=" << key << " maildir="
+      @maildir.inspect(io)
+      io << '>'
     end
 
     # Helper to get serializer.
@@ -103,6 +120,7 @@ class Maildir
       rename("cur", info)
     end
 
+    # The standard maildir flags, and the letters representing them.
     FLAG_NAMES = {
       passed:  "P",
       replied: "R",
@@ -112,88 +130,64 @@ class Maildir
       flagged: "F",
     }
 
-    def passed?
-      flags.includes?("P")
-    end
+    {% for name, flag in FLAG_NAMES %}
+      # Returns true if the message carries the "{{flag.id}}" ({{name.id}}) flag.
+      def {{name.id}}?
+        flags.includes?({{flag}})
+      end
 
-    def passed!
-      add_flag("P")
-    end
-
-    def replied?
-      flags.includes?("R")
-    end
-
-    def replied!
-      add_flag("R")
-    end
-
-    def seen?
-      flags.includes?("S")
-    end
-
-    def seen!
-      add_flag("S")
-    end
-
-    def trashed?
-      flags.includes?("T")
-    end
-
-    def trashed!
-      add_flag("T")
-    end
-
-    def draft?
-      flags.includes?("D")
-    end
-
-    def draft!
-      add_flag("D")
-    end
-
-    def flagged?
-      flags.includes?("F")
-    end
-
-    def flagged!
-      add_flag("F")
-    end
+      # Adds the "{{flag.id}}" ({{name.id}}) flag to the message.
+      # Returns the message's key if successful, false otherwise.
+      def {{name.id}}!
+        add_flag({{flag}})
+      end
+    {% end %}
 
     # Returns an array of single letter flags applied to the message
-    def flags
-      @info.to_s.sub(INFO, "").chars.map(&.to_s)
+    def flags : Array(String)
+      info = @info
+      return [] of String unless info
+      info.lchop(INFO).chars.map(&.to_s)
     end
 
     # Sets the flags on a message.
     # Returns the message's key if successful, false otherwise.
+    #
+    # flags:: String or Enumerable of flags
     def flags=(flags)
-      self.info = INFO + sort_flags(flags.to_a.flatten.join(""))
+      self.info = INFO + normalize_flags(flags)
     end
 
-    # Adds a flag to a message.
+    # Adds one or more flags to a message.
     # Returns the message's key if successful, false otherwise.
+    #
+    # flag:: String or Enumerable of flags
     def add_flag(flag)
-      self.flags = (flags << flag.upcase)
+      self.flags = flags.join + normalize_flags(flag)
     end
 
     # Removes flags from a message.
     # Returns the message's key if successful, false otherwise.
     #
-    # flags:: String or Array
+    # flags:: String or Enumerable of flags
     def remove_flag(flags)
-      return self.flags if flags.blank?
-      self.flags = self.flags.reject { |flag| flag =~ /[#{flags}]/i }
+      removed = normalize_flags(flags)
+      return key if removed.empty?
+      self.flags = self.flags.reject { |flag| removed.includes?(flag.upcase) }
     end
 
     # Returns the filename of the message
     def filename
-      [unique_name, info].compact.join(COLON)
+      if info = @info
+        "#{@unique_name}#{COLON}#{info}"
+      else
+        @unique_name
+      end
     end
 
     # Returns the key to identify the message
     def key
-      File.join(dir.to_s, filename)
+      File.join(dir, filename)
     end
 
     # Returns the full path to the message
@@ -232,24 +226,17 @@ class Maildir
     rescue e : File::NotFoundError
       if ok = @old_key
         # Restore ourselves to the old state
-        parse_key(ok)
+        @dir, @unique_name, @info = Message.parse_key(ok)
       end
 
       reraise ? raise(e) : false
     end
 
-    # Sets dir, unique_name, and info based on the key
-    protected def parse_key(key)
-      @dir, filename = key.split(File::SEPARATOR)
-      @unique_name, sep, info = filename.partition(COLON)
-      # A missing info part (new/tmp messages) must stay nil, otherwise #filename
-      # would re-append a stray trailing colon and no longer match the real file.
-      @info = sep.empty? ? nil : info
-    end
-
-    # Ensure the flags are uppercase and sorted
-    protected def sort_flags(flags)
-      flags.split("").map(&.upcase).sort!.uniq.join("")
+    # Returns the given flags (a String or an Enumerable of flags) as a single
+    # uppercase, sorted, duplicate-free String.
+    protected def normalize_flags(flags) : String
+      chars = flags.is_a?(String) ? flags.chars : flags.flat_map(&.to_s.chars)
+      chars.map!(&.upcase).sort!.uniq!.join
     end
 
     protected def old_path

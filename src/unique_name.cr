@@ -4,6 +4,10 @@ class Maildir
     COUNTER_MUTEX = Mutex.new
 
     @@counter = 0
+    @@hostname : String?
+
+    @now : Time
+    @count : Int32
 
     # Return a thread-safe increasing counter
     def self.counter
@@ -12,19 +16,28 @@ class Maildir
       end
     end
 
+    # The hostname, with the characters that are not allowed in a maildir
+    # filename escaped as the maildir spec prescribes. Looked up only once, as
+    # it can't meaningfully change during the lifetime of a process.
+    def self.hostname : String
+      @@hostname ||= System.hostname.gsub('/', "\\057").gsub(':', "\\072")
+    end
+
     def self.create
       self.new.to_s
     end
 
     # Return a unique file name based on strategy
     def initialize
-      # Use the same time object
+      # Take the time and the counter once, so that the name of a given
+      # instance is stable no matter how often it is rendered
       @now = Time.utc
+      @count = self.class.counter
     end
 
     # Return the name as a string
-    def to_s
-      [left, middle, right].join(".")
+    def to_s(io : IO) : Nil
+      io << left << '.' << middle << '.' << right
     end
 
     # The left part of the unique name is the number of seconds from since the
@@ -36,18 +49,19 @@ class Maildir
     # The middle part contains the microsecond, the process id, and a
     # per-process incrementing counter
     protected def middle
-      "M" + microsecond.to_s + "P#{process_id}Q#{delivery_count}"
+      "M#{microsecond}P#{process_id}Q#{delivery_count}"
     end
 
     # The right part is the hostname
     protected def right
-      System.hostname
+      self.class.hostname
     end
 
+    # The microseconds elapsed within the current second. Zero-padded to a
+    # fixed width so that names created within the same second still sort
+    # chronologically as plain strings.
     protected def microsecond
-      # Crystal will have TicksPerMicrosecond after https://github.com/crystal-lang/crystal/pull/4707
-      # Until that's included and #microsecond is added, here's our custom implementation:
-      @now.to_unix_ms.to_s
+      (@now.nanosecond // 1_000).to_s.rjust(6, '0')
     end
 
     protected def process_id
@@ -55,7 +69,7 @@ class Maildir
     end
 
     protected def delivery_count
-      self.class.counter.to_s
+      @count.to_s
     end
   end
 end

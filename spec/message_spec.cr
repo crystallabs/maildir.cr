@@ -31,6 +31,20 @@ describe Maildir::Message do
       maildir = temp_maildir
       expect_raises(ArgumentError) { Maildir::Message.new(maildir, "bogus/key") }
     end
+
+    it "raises ArgumentError, not IndexError, for a malformed key" do
+      maildir = temp_maildir
+      expect_raises(ArgumentError, /Key must be/) { Maildir::Message.new(maildir, "no-separator") }
+      expect_raises(ArgumentError, /Key must be/) { Maildir::Message.new(maildir, "new/") }
+    end
+
+    it "round-trips keys of new messages without a stray colon" do
+      maildir = temp_maildir
+      message = maildir.add("body")
+      message.info.should be_nil
+      message.key.should_not contain ':'
+      maildir.get(message.key).filename.should eq message.filename
+    end
   end
 
   describe "flags" do
@@ -91,6 +105,73 @@ describe Maildir::Message do
       maildir = temp_maildir
       message = maildir.add("body") # still in new
       expect_raises(Exception, /Can only set info/) { message.info = "2,S" }
+    end
+
+    it "treats regexp metacharacters in remove_flag as literal flags" do
+      maildir = temp_maildir
+      message = maildir.add("body")
+      message.process
+      message.add_flag("SF")
+
+      # "[A-Z]" used to be interpolated into a regexp and wipe every flag.
+      message.remove_flag("[A-Z]")
+      message.flags.should eq ["F", "S"]
+    end
+
+    it "accepts a String or an Array for flags=, add_flag and remove_flag" do
+      maildir = temp_maildir
+      message = maildir.add("body")
+      message.process
+
+      message.flags = "sf"
+      message.flags.should eq ["F", "S"]
+      message.add_flag(["r", "T"])
+      message.flags.should eq ["F", "R", "S", "T"]
+      message.remove_flag(["f", "t"])
+      message.flags.should eq ["R", "S"]
+    end
+
+    it "returns the message's key from the flag mutators" do
+      maildir = temp_maildir
+      message = maildir.add("body")
+      message.process
+
+      message.add_flag("S").should eq message.key
+      message.remove_flag("S").should eq message.key
+      message.remove_flag("").should eq message.key
+    end
+
+    it "provides a predicate and a bang method for every standard flag" do
+      maildir = temp_maildir
+      message = maildir.add("body")
+      message.process
+
+      message.passed?.should be_false
+      message.replied?.should be_false
+      message.trashed?.should be_false
+      message.draft?.should be_false
+
+      message.passed!
+      message.replied!
+      message.seen!
+      message.trashed!
+      message.draft!
+      message.flagged!
+
+      message.passed?.should be_true
+      message.replied?.should be_true
+      message.trashed?.should be_true
+      message.draft?.should be_true
+      message.flags.should eq Maildir::Message::FLAG_NAMES.values.to_a.sort
+    end
+
+    it "only strips the leading info marker when reading flags" do
+      maildir = temp_maildir
+      message = maildir.add("body")
+      message.process
+      # A non-standard info must not be rewritten from the middle
+      message.info = "3,X2,Y"
+      message.flags.should eq ["3", ",", "X", "2", ",", "Y"]
     end
   end
 

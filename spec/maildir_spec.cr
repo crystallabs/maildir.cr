@@ -20,6 +20,24 @@ describe Maildir do
     it "ensures the path ends with a trailing slash" do
       temp_maildir.path.ends_with?("/").should be_true
     end
+
+    it "creates missing parent directories" do
+      dir = File.join(Dir.tempdir, "maildir_deep_#{Process.pid}", "a", "b")
+      FileUtils.rm_rf(File.dirname(File.dirname(dir)))
+      TEMP_MAILDIRS << File.dirname(File.dirname(dir))
+      Maildir.maildir?(Maildir.new(dir).path).should be_true
+    end
+
+    it "tolerates the directories already existing, whole or in part" do
+      # Stands in for another process winning the race to create them
+      dir = File.join(Dir.tempdir, "maildir_partial_#{Process.pid}")
+      FileUtils.rm_rf(dir)
+      TEMP_MAILDIRS << dir
+      FileUtils.mkdir_p(File.join(dir, "new"))
+
+      Maildir.maildir?(Maildir.new(dir).path).should be_true
+      Maildir.maildir?(Maildir.new(dir).path).should be_true # Fully existing
+    end
   end
 
   describe "#path helpers" do
@@ -84,6 +102,33 @@ describe Maildir do
       maildir = temp_maildir
       expect_raises(ArgumentError) { maildir.list("bogus") }
     end
+
+    it "returns an empty list when the subdirectories don't exist" do
+      dir = File.join(Dir.tempdir, "maildir_missing_#{Process.pid}")
+      FileUtils.rm_rf(dir)
+      TEMP_MAILDIRS << dir
+      Maildir.new(dir, false).list("new").should be_empty
+    end
+
+    it "does not treat glob metacharacters in the path as patterns" do
+      # A maildir whose path contains "*", "?" and "[" must still list its own
+      # messages, and only its own.
+      base = File.join(Dir.tempdir, "maildir_glob_#{Process.pid}")
+      FileUtils.rm_rf(base)
+      TEMP_MAILDIRS << base
+
+      maildir = Maildir.new(File.join(base, "a[0]*?"))
+      Maildir.new(File.join(base, "a000")).add("decoy")
+      maildir.add("real")
+
+      maildir.list("new").map(&.data).should eq ["real"]
+    end
+
+    it "ignores dotfiles in the message directories" do
+      maildir = temp_maildir
+      File.write(File.join(maildir.new_path, ".nfs_turd"), "junk")
+      maildir.list("new").should be_empty
+    end
   end
 
   describe "#delete" do
@@ -126,6 +171,26 @@ describe Maildir do
       custom = Maildir::Serializer::JSON.new
       maildir.serializer = custom
       maildir.serializer.should be custom
+    end
+
+    it "keeps following the default after the default is replaced" do
+      maildir = temp_maildir
+      maildir.serializer # Read once, before the default changes
+
+      custom = Maildir::Serializer::JSON.new
+      Maildir.serializer = custom
+      begin
+        maildir.serializer.should be custom
+      ensure
+        Maildir.serializer = Maildir::Serializer::Base.new
+      end
+    end
+  end
+
+  describe "#inspect" do
+    it "renders the path" do
+      maildir = temp_maildir
+      maildir.inspect.should eq "#<Maildir path=#{maildir.path}>"
     end
   end
 end

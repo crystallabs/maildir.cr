@@ -19,7 +19,19 @@ class Maildir
       end
 
       protected def write(data, path)
-        File.open path, "w", &.write(data.to_s.to_slice)
+        slice = data.to_s.to_slice
+        File.open(path, "w") do |file|
+          file.write(slice)
+          sync(file) if Maildir.fsync?
+        end
+        slice.size
+      end
+
+      # Flushes the message to disk. Called while the message is still in "tmp",
+      # so that moving it into "new" can't expose a truncated message after a
+      # crash. Serializers that manage their own durability can override this.
+      protected def sync(file : File) : Nil
+        file.fsync
       end
     end
   end

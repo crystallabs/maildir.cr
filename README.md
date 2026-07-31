@@ -136,6 +136,59 @@ maildir.get_stale_tmp.each { |msg| msg.destroy }
 
 For more usage examples, please see files in the library's `spec/` folder.
 
+### Durability
+
+The maildir format promises that a message which is visible in "new/" is complete.
+For that to hold across a crash or a power loss, the message has to reach the disk before it is moved out of "tmp/", so by default every message is `fsync`ed on write.
+
+If your data is cheap to reproduce and you care more about delivery throughput than about surviving a crash, you can turn this off globally:
+
+```crystal
+Maildir.fsync = false
+```
+
+A custom serializer that manages durability itself can override `Maildir::Serializer::Base#sync` instead.
+
+### Folders
+
+Maildirs can contain folders, in the Maildir++ layout used by Courier and Dovecot.
+A folder is a dot-prefixed directory inside the root maildir (`.a`), nesting is expressed by joining the name components with a dot (`.a.x`), and each folder carries an empty `maildirfolder` file so that other tools recognize it as a folder.
+All of that is handled for you:
+
+```crystal
+maildir = Maildir.new("/tmp/maildir_test")
+
+folder = maildir.folder("a")        # => the maildir at /tmp/maildir_test/.a/
+nested = maildir.folder("a.x")      # => the maildir at /tmp/maildir_test/.a.x/
+nested == folder.folder("x")        # => true; naming by dot and by chaining agree
+maildir.folder("b", false)          # => a folder object without creating it on disk
+```
+
+Folders are maildirs like any other, so they add, list and process messages the same way:
+
+```crystal
+folder.add("Hello from a folder!")
+folder.list("new") # => [message]
+```
+
+Navigate the tree with `#folders` (immediate subfolders, sorted), `#parent` and `#root`:
+
+```crystal
+maildir.folders.map(&.folder_name) # => ["a", "b"]
+folder.folders.map(&.folder_name)  # => ["a.x"]
+nested.parent == folder            # => true
+nested.root == maildir             # => true
+maildir.parent                     # => nil
+```
+
+`#folder?` and `#folder_name` tell a folder from a root maildir. A maildir which merely lives at a dot-path, such as `~/.maildir`, is correctly treated as a root and not as a folder of its parent directory.
+
+```crystal
+maildir.folder? # => false
+nested.folder?  # => true
+nested.folder_name # => "a.x"
+```
+
 ## Pluggable Serializers
 
 By default, message data are written and read from disk as a string. However, it may be desirable to automatically process strings into useful objects. This library supports configurable serializers to convert objects to strings and back.
