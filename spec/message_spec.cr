@@ -175,6 +175,73 @@ describe Maildir::Message do
     end
   end
 
+  describe "#rewrite" do
+    it "replaces the contents in place, keeping the key" do
+      maildir = temp_maildir
+      message = maildir.add("first")
+      message.process
+      key = message.key
+
+      message.rewrite("second").should eq key
+      message.key.should eq key
+      message.data.should eq "second"
+      maildir.list("cur").map(&.key).should eq [key]
+      maildir.list("tmp").should be_empty
+    end
+
+    it "works on a message still in new" do
+      maildir = temp_maildir
+      message = maildir.add("first")
+      message.rewrite("second")
+      message.dir.should eq "new"
+      message.data.should eq "second"
+    end
+
+    it "raises when the message is in tmp or gone" do
+      maildir = temp_maildir
+      expect_raises(Exception, /Can only rewrite/) { Maildir::Message.new(maildir).rewrite("x") }
+
+      message = maildir.add("body")
+      message.destroy
+      expect_raises(File::NotFoundError) { message.rewrite("x") }
+      maildir.list("tmp").should be_empty
+    end
+  end
+
+  describe "#move_to" do
+    it "moves the file into another maildir, keeping dir, unique name and info" do
+      maildir = temp_maildir
+      folder = maildir.folder("a")
+      message = maildir.add("body")
+      message.process
+      key = message.key
+
+      message.move_to(folder).should eq key
+      message.maildir.should eq folder
+      message.key.should eq key
+      message.data.should eq "body"
+      maildir.list("cur").should be_empty
+      folder.list("cur").map(&.key).should eq [key]
+    end
+
+    it "is a no-op when the target is the message's own maildir" do
+      maildir = temp_maildir
+      message = maildir.add("body")
+      message.move_to(maildir).should eq message.key
+      maildir.list("new").map(&.key).should eq [message.key]
+    end
+
+    it "raises when the message is in tmp or gone" do
+      maildir = temp_maildir
+      folder = maildir.folder("a")
+      expect_raises(Exception, /Can only move/) { Maildir::Message.new(maildir).move_to(folder) }
+
+      message = maildir.add("body")
+      message.destroy
+      expect_raises(File::NotFoundError) { message.move_to(folder) }
+    end
+  end
+
   describe "#data" do
     it "raises File::NotFoundError when the file is gone" do
       maildir = temp_maildir

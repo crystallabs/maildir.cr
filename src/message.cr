@@ -49,7 +49,8 @@ class Maildir
     getter info : String?
 
     @old_key : String?
-    @maildir : Maildir
+    # The maildir this message lives in.
+    getter maildir : Maildir
 
     # Create a new, unwritten message or instantiate an existing message.
     # If key is nil, create a new message:
@@ -118,6 +119,39 @@ class Maildir
     def info=(info)
       raise "Can only set info on cur messages" unless "cur" == @dir
       rename("cur", info)
+    end
+
+    # Replaces the message's contents on disk, atomically: the new data is
+    # written to a file of the same unique name in "tmp", flushed if
+    # `Maildir.fsync?` says so, and renamed over the existing file. A concurrent
+    # reader therefore sees either the old or the new message, never a partial
+    # one. Can only be called on messages in "new" or "cur"; raises
+    # File::NotFoundError if the message is gone.
+    #
+    # Returns the message's key.
+    def rewrite(data)
+      raise "Can only rewrite messages in new or cur" if "tmp" == @dir
+      raise File::NotFoundError.new("Message is gone", file: path) unless File.exists?(path)
+
+      tmp_path = File.join(@maildir.tmp_path, @unique_name)
+      serializer.dump(data, tmp_path)
+      File.rename(tmp_path, path)
+      key
+    end
+
+    # Moves the message into another maildir, typically a folder of the same
+    # root, keeping its dir, unique name and info. Can only be called on
+    # messages in "new" or "cur"; raises File::NotFoundError if the message is
+    # gone. Afterwards the message belongs to the target maildir.
+    #
+    # Returns the message's key.
+    def move_to(target : Maildir)
+      raise "Can only move messages in new or cur" if "tmp" == @dir
+      return key if target.path == @maildir.path
+
+      File.rename(path, File.join(target.path, key))
+      @maildir = target
+      key
     end
 
     # The standard maildir flags, and the letters representing them.

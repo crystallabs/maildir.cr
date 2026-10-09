@@ -110,6 +110,13 @@ message_copy = maildir.get(key)
 message == message_copy # => true
 ```
 
+Replace the contents of an existing message. The new data goes to "tmp/" first and is then renamed over the old file, so other readers see either the old or the new message, never a partial one:
+
+```crystal
+message.rewrite("Hello again!")
+message.data # => "Hello again!"
+```
+
 Delete the message from disk:
 
 ```crystal
@@ -169,6 +176,15 @@ Folders are maildirs like any other, so they add, list and process messages the 
 ```crystal
 folder.add("Hello from a folder!")
 folder.list("new") # => [message]
+```
+
+Move a message into a folder (or back to the root) with `#move_to`; it keeps its unique name and flags:
+
+```crystal
+message = maildir.add("Filed later")
+message.move_to(folder)
+message.maildir == folder # => true
+folder.list("new").includes?(message) # => true
 ```
 
 Navigate the tree with `#folders` (immediate subfolders, sorted), `#parent` and `#root`:
