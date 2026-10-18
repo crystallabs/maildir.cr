@@ -15,10 +15,6 @@ class Maildir
 
       # Writes data to the file at path. Returns the number of bytes written.
       def dump(data, path)
-        write(data, path)
-      end
-
-      protected def write(data, path)
         slice = data.to_s.to_slice
         File.open(path, "w") do |file|
           file.write(slice)
