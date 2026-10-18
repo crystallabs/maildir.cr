@@ -189,10 +189,12 @@ class Maildir
   end
 
   # Returns this maildir's immediate subfolders, sorted by path. Deeper
-  # descendants are reached by asking those folders in turn.
+  # descendants are reached by asking those folders in turn. Only directories
+  # which actually hold a maildir count; a stray dot-directory in the root
+  # (say ".git") is not a folder.
   def folders : Array(Maildir)
     root_path = root.path
-    prefix = (name = folder_name) ? "#{name}#{FOLDER_SEPARATOR}" : ""
+    prefix = folder_name.try { |own_name| "#{own_name}#{FOLDER_SEPARATOR}" } || ""
 
     maildirs = [] of Maildir
     return maildirs unless Dir.exists?(root_path)
@@ -205,9 +207,11 @@ class Maildir
       # Only immediate children: anything below them still carries a separator
       rest = name.lchop(prefix)
       next if rest.empty? || rest.includes?(FOLDER_SEPARATOR)
-      next unless Dir.exists?(File.join(root_path, entry))
 
-      maildirs << Maildir.new(File.join(root_path, entry), false)
+      folder_path = File.join(root_path, entry)
+      next unless Maildir.maildir?(folder_path)
+
+      maildirs << Maildir.new(folder_path, false)
     end
 
     maildirs.sort!

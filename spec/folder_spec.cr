@@ -132,6 +132,7 @@ describe "Maildir folders" do
     it "ignores dot files and non-maildir entries in the root" do
       maildir = maildir_with_folders
       File.write(File.join(maildir.path, ".subscriptions"), "a\n")
+      Dir.mkdir(File.join(maildir.path, ".git"))
       maildir.folders.map(&.folder_name).should eq ["a", "b"]
     end
   end
