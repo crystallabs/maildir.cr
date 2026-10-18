@@ -58,6 +58,8 @@ describe Maildir::Message do
       maildir = temp_maildir
       expect_raises(ArgumentError, /Key must be/) { Maildir::Message.new(maildir, "no-separator") }
       expect_raises(ArgumentError, /Key must be/) { Maildir::Message.new(maildir, "new/") }
+      expect_raises(ArgumentError, /Key must be/) { Maildir::Message.new(maildir, "new/a/b") }
+      expect_raises(ArgumentError, /Key must be/) { Maildir::Message.new(maildir, "new/../tmp/x") }
     end
 
     it "round-trips keys of new messages without a stray colon" do

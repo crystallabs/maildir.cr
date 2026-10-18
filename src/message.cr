@@ -34,7 +34,7 @@ class Maildir
     # Raises ArgumentError if the key is not of the form "dir/unique_name[:info]".
     def self.parse_key(key : String) : {String, String, String?}
       dir, separator, filename = key.partition(File::SEPARATOR)
-      if separator.empty? || dir.empty? || filename.empty?
+      if separator.empty? || dir.empty? || filename.empty? || filename.includes?(File::SEPARATOR)
         raise ArgumentError.new "Key must be of the form \"dir#{File::SEPARATOR}filename\", got #{key.inspect}"
       end
 
