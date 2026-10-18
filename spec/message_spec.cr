@@ -20,6 +20,28 @@ describe Maildir::Message do
       message.info.should eq Maildir::Message::INFO
     end
 
+    it "keeps the flags of a message which is processed again" do
+      maildir = temp_maildir
+      message = maildir.add("body")
+      message.process
+      message.add_flag("S")
+      key = message.key
+
+      message.process.should eq key
+      message.key.should eq key
+      message.flags.should eq ["S"]
+      maildir.list("cur").map(&.key).should eq [key]
+    end
+
+    it "refuses to process a message which is still in tmp" do
+      maildir = temp_maildir
+      message = Maildir::Message.new(maildir)
+      maildir.serializer.dump("body", message.path)
+
+      expect_raises(Exception, /Can only process/) { message.process }
+      message.dir.should eq "tmp"
+    end
+
     it "raises when writing a message that already has a key" do
       maildir = temp_maildir
       message = maildir.add("body")

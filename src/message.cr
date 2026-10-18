@@ -108,9 +108,13 @@ class Maildir
       rename("new")
     end
 
-    # Move a message from new to cur, add info.
-    # Returns the message's key
+    # Moves a message from new to cur, adding the default info. A message which
+    # is already in cur is left alone, flags included, so calling this twice is
+    # harmless. Raises on a message in tmp, which has to be written first.
+    # Returns the message's key.
     def process
+      raise "Can only process messages in new" if "tmp" == @dir
+      return key if "cur" == @dir
       rename("cur", INFO)
     end
 
