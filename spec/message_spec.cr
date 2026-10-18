@@ -266,6 +266,30 @@ describe Maildir::Message do
     end
   end
 
+  describe "renaming a missing message" do
+    it "returns false and keeps the old dir and info" do
+      maildir = temp_maildir
+      message = maildir.add("body")
+      message.process
+      message.add_flag("S")
+      key = message.key
+
+      message.destroy
+      message.add_flag("F").should be_false
+      message.key.should eq key
+      message.process.should eq key # Still in cur, so a no-op
+    end
+
+    it "does not disturb a message which is missing when first examined" do
+      maildir = temp_maildir
+      message = maildir.add("body")
+      message.destroy
+      message.process.should be_false
+      message.dir.should eq "new"
+      message.info.should be_nil
+    end
+  end
+
   describe "#data" do
     it "raises File::NotFoundError when the file is gone" do
       maildir = temp_maildir

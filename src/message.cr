@@ -48,7 +48,6 @@ class Maildir
     getter unique_name : String
     getter info : String?
 
-    @old_key : String?
     # The maildir this message lives in.
     getter maildir : Maildir
 
@@ -236,7 +235,7 @@ class Maildir
     # Returns the message's data from disk.
     # If the path doesn't exist, raises File::NotFoundError.
     def data
-      guard(true) { serializer.load(path) }
+      serializer.load(path)
     end
 
     # Updates the modification and access time. Returns nil if successful, false
@@ -257,17 +256,11 @@ class Maildir
     end
 
     # Guard access to the file system by rescuing File::NotFoundError, which
-    # happens if the file is missing. When the block fails and +reraise+ is
-    # false, returns false, otherwise reraises the original error.
-    protected def guard(reraise = false, &)
+    # happens if the file is missing. Returns false in that case.
+    protected def guard(&)
       yield
-    rescue e : File::NotFoundError
-      if ok = @old_key
-        # Restore ourselves to the old state
-        @dir, @unique_name, @info = Message.parse_key(ok)
-      end
-
-      reraise ? raise(e) : false
+    rescue File::NotFoundError
+      false
     end
 
     # Returns the given flags (a String or an Enumerable of flags) as a single
@@ -277,23 +270,20 @@ class Maildir
       chars.map!(&.upcase).sort!.uniq!.join
     end
 
-    protected def old_path
-      File.join(@maildir.path, @old_key || "")
-    end
-
-    # Renames the message. Returns the new key if successful, false otherwise.
+    # Renames the message. Returns the new key if successful, false otherwise,
+    # in which case the message keeps its old dir and info.
     protected def rename(new_dir, new_info = nil)
-      # Save the old key so we can revert to the old state
-      @old_key = key
+      old_dir, old_info, old_path = @dir, @info, path
 
-      # Set the new state
       @dir = new_dir
       @info = new_info if new_info
 
-      guard do
+      begin
         File.rename(old_path, path) unless old_path == path
-        @old_key = nil # So guard() doesn't reset to a bad state
-        return key
+        key
+      rescue File::NotFoundError
+        @dir, @info = old_dir, old_info
+        false
       end
     end
   end
